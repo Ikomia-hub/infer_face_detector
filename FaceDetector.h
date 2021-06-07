@@ -64,7 +64,7 @@ class FACEDETECTORSHARED_EXPORT CFaceDetector: public COcvDnnProcess
 //--------------------------------//
 //----- CFaceDetectorFactory -----//
 //--------------------------------//
-class FACEDETECTORSHARED_EXPORT CFaceDetectorFactory : public CProcessFactory
+class FACEDETECTORSHARED_EXPORT CFaceDetectorFactory : public CTaskFactory
 {
     public:
 
@@ -85,7 +85,7 @@ class FACEDETECTORSHARED_EXPORT CFaceDetectorFactory : public CProcessFactory
             m_info.m_keywords = "deep,learning,detection,caffe";
         }
 
-        virtual ProtocolTaskPtr create(const ProtocolTaskParamPtr& pParam) override
+        virtual WorkflowTaskPtr create(const WorkflowTaskParamPtr& pParam) override
         {
             auto paramPtr = std::dynamic_pointer_cast<CFaceDetectorParam>(pParam);
             if(paramPtr != nullptr)
@@ -93,7 +93,7 @@ class FACEDETECTORSHARED_EXPORT CFaceDetectorFactory : public CProcessFactory
             else
                 return create();
         }
-        virtual ProtocolTaskPtr create() override
+        virtual WorkflowTaskPtr create() override
         {
             auto paramPtr = std::make_shared<CFaceDetectorParam>();
             assert(paramPtr != nullptr);
@@ -112,7 +112,7 @@ class FACEDETECTORSHARED_EXPORT CFaceDetectorWidget: public COcvWidgetDnnCore
         {
             init();
         }
-        CFaceDetectorWidget(ProtocolTaskParamPtr pParam, QWidget *parent = Q_NULLPTR): COcvWidgetDnnCore(pParam, parent)
+        CFaceDetectorWidget(WorkflowTaskParamPtr pParam, QWidget *parent = Q_NULLPTR): COcvWidgetDnnCore(pParam, parent)
         {
             m_pParam = std::dynamic_pointer_cast<CFaceDetectorParam>(pParam);
             init();
@@ -163,7 +163,7 @@ class FACEDETECTORSHARED_EXPORT CFaceDetectorWidgetFactory : public CWidgetFacto
             m_name = QObject::tr("Face Detector").toStdString();
         }
 
-        virtual ProtocolTaskWidgetPtr   create(ProtocolTaskParamPtr pParam)
+        virtual WorkflowTaskWidgetPtr   create(WorkflowTaskParamPtr pParam)
         {
             return std::make_shared<CFaceDetectorWidget>(pParam);
         }
@@ -180,7 +180,7 @@ class FACEDETECTORSHARED_EXPORT CFaceDetectorInterface : public QObject, public 
 
     public:
 
-        virtual std::shared_ptr<CProcessFactory> getProcessFactory()
+        virtual std::shared_ptr<CTaskFactory> getProcessFactory()
         {
             return std::make_shared<CFaceDetectorFactory>();
         }

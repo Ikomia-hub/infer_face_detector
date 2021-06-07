@@ -3,15 +3,15 @@
 
 CFaceDetector::CFaceDetector() : COcvDnnProcess()
 {
-    addOutput(std::make_shared<CGraphicsProcessOutput>());
-    addOutput(std::make_shared<CMeasureProcessIO>());
+    addOutput(std::make_shared<CGraphicsOutput>());
+    addOutput(std::make_shared<CMeasureIO>());
     m_pParam = std::make_shared<CFaceDetectorParam>();
 }
 
 CFaceDetector::CFaceDetector(const std::string &name, const std::shared_ptr<CFaceDetectorParam> &pParam): COcvDnnProcess(name)
 {
-    addOutput(std::make_shared<CGraphicsProcessOutput>());
-    addOutput(std::make_shared<CMeasureProcessIO>());
+    addOutput(std::make_shared<CGraphicsOutput>());
+    addOutput(std::make_shared<CMeasureIO>());
     m_pParam = std::make_shared<CFaceDetectorParam>(*pParam);
 }
 
@@ -38,7 +38,7 @@ cv::Scalar CFaceDetector::getNetworkInputMean() const
 void CFaceDetector::run()
 {
     beginTaskRun();
-    auto pInput = std::dynamic_pointer_cast<CImageProcessIO>(getInput(0));
+    auto pInput = std::dynamic_pointer_cast<CImageIO>(getInput(0));
     auto pParam = std::dynamic_pointer_cast<CFaceDetectorParam>(m_pParam);
 
     if(pInput == nullptr || pParam == nullptr)
@@ -104,16 +104,16 @@ void CFaceDetector::manageOutput(cv::Mat &dnnOutput)
     // detections and an every detection is a vector of values
     // [batchId, classId, confidence, left, top, right, bottom]
     auto pParam = std::dynamic_pointer_cast<CFaceDetectorParam>(m_pParam);
-    auto pInput = std::dynamic_pointer_cast<CImageProcessIO>(getInput(0));
+    auto pInput = std::dynamic_pointer_cast<CImageIO>(getInput(0));
     CMat imgSrc = pInput->getImage();
 
     //Graphics output
-    auto pGraphicsOutput = std::dynamic_pointer_cast<CGraphicsProcessOutput>(getOutput(1));
+    auto pGraphicsOutput = std::dynamic_pointer_cast<CGraphicsOutput>(getOutput(1));
     pGraphicsOutput->setNewLayer("FaceDetector");
     pGraphicsOutput->setImageIndex(0);
 
     //Measures output
-    auto pMeasureOutput = std::dynamic_pointer_cast<CMeasureProcessIO>(getOutput(2));
+    auto pMeasureOutput = std::dynamic_pointer_cast<CMeasureIO>(getOutput(2));
     pMeasureOutput->clearData();
 
     for(int i=0; i<dnnOutput.size[2]; i++)
