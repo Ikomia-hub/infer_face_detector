@@ -120,7 +120,7 @@ class FACEDETECTORSHARED_EXPORT CFaceDetectorWidget: public COcvWidgetDnnCore
 
     private:
 
-        void init() override
+        void init()
         {
             if(m_pParam == nullptr)
                 m_pParam = std::make_shared<CFaceDetectorParam>();
@@ -144,10 +144,11 @@ class FACEDETECTORSHARED_EXPORT CFaceDetectorWidget: public COcvWidgetDnnCore
                 assert(pParam);
                 pParam->m_nmsThreshold = val;
             });
-            connect(m_pApplyBtn, &QPushButton::clicked, [&]
-            {
-                emit doApplyProcess(m_pParam);
-            });
+        }
+
+        void onApply() override
+        {
+            emit doApplyProcess(m_pParam);
         }
 };
 
