@@ -4,14 +4,14 @@
 CFaceDetector::CFaceDetector() : COcvDnnProcess()
 {
     addOutput(std::make_shared<CGraphicsOutput>());
-    addOutput(std::make_shared<CMeasureIO>());
+    addOutput(std::make_shared<CBlobMeasureIO>());
     m_pParam = std::make_shared<CFaceDetectorParam>();
 }
 
 CFaceDetector::CFaceDetector(const std::string &name, const std::shared_ptr<CFaceDetectorParam> &pParam): COcvDnnProcess(name)
 {
     addOutput(std::make_shared<CGraphicsOutput>());
-    addOutput(std::make_shared<CMeasureIO>());
+    addOutput(std::make_shared<CBlobMeasureIO>());
     m_pParam = std::make_shared<CFaceDetectorParam>(*pParam);
 }
 
@@ -113,7 +113,7 @@ void CFaceDetector::manageOutput(cv::Mat &dnnOutput)
     pGraphicsOutput->setImageIndex(0);
 
     //Measures output
-    auto pMeasureOutput = std::dynamic_pointer_cast<CMeasureIO>(getOutput(2));
+    auto pMeasureOutput = std::dynamic_pointer_cast<CBlobMeasureIO>(getOutput(2));
     pMeasureOutput->clearData();
 
     for(int i=0; i<dnnOutput.size[2]; i++)
