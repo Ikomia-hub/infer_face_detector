@@ -70,7 +70,7 @@ class FACEDETECTORSHARED_EXPORT CFaceDetectorFactory : public CTaskFactory
 
         CFaceDetectorFactory()
         {
-            m_info.m_name = QObject::tr("Face Detector").toStdString();
+            m_info.m_name = "infer_face_detector";
             m_info.m_shortDescription = QObject::tr("Deep learning based face detector").toStdString();
             m_info.m_description = QObject::tr("This model was included in OpenCV from version 3.3. "
                                                "It is based on Single-Shot-Multibox detector and uses ResNet-10 Architecture as backbone. "
@@ -161,7 +161,7 @@ class FACEDETECTORSHARED_EXPORT CFaceDetectorWidgetFactory : public CWidgetFacto
 
         CFaceDetectorWidgetFactory()
         {
-            m_name = QObject::tr("Face Detector").toStdString();
+            m_name = "infer_face_detector";
         }
 
         virtual WorkflowTaskWidgetPtr   create(WorkflowTaskParamPtr pParam)
