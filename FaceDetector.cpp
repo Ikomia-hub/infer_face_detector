@@ -76,6 +76,15 @@ void CFaceDetector::run()
         }
 
         int size = getNetworkInputSize();
+        // Trick to overcome OpenCV issue around CUDA context and multithreading
+        // https://github.com/opencv/opencv/issues/20566
+        if(pParam->m_backend == cv::dnn::DNN_BACKEND_CUDA && m_bNewInput)
+        {
+            size = size + (m_sign * 32);
+            m_sign *= -1;
+            m_bNewInput = false;
+        }
+
         double scaleFactor = getNetworkInputScaleFactor();
         cv::Scalar mean = getNetworkInputMean();
         auto inputBlob = cv::dnn::blobFromImage(imgSrc, scaleFactor, cv::Size(size,size), mean, false, false);
