@@ -76,7 +76,7 @@ class FACEDETECTORSHARED_EXPORT CFaceDetectorFactory : public CTaskFactory
                                                "It is based on Single-Shot-Multibox detector and uses ResNet-10 Architecture as backbone. "
                                                "The model was trained using images available from the web, but the source is not disclosed.").toStdString();
             m_info.m_docLink = "https://www.pyimagesearch.com/2018/02/26/face-detection-with-opencv-and-deep-learning/";
-            m_info.m_path = QObject::tr("Plugins/C++/Face/Detection").toStdString();
+            m_info.m_path = QObject::tr("Plugins/C++/Face").toStdString();
             m_info.m_iconPath = "Icon/icon.png";
             m_info.m_authors = "OpenCV, Ikomia";
             m_info.m_license = "3-clause BSD License";
