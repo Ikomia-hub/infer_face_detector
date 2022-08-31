@@ -81,7 +81,7 @@ class FACEDETECTORSHARED_EXPORT CFaceDetectorFactory : public CTaskFactory
             m_info.m_authors = "OpenCV, Ikomia";
             m_info.m_license = "3-clause BSD License";
             m_info.m_repo = "https://github.com/opencv/opencv/tree/master/samples/dnn";
-            m_info.m_version = "1.0.0";
+            m_info.m_version = "1.1.0";
             m_info.m_keywords = "deep,learning,detection,caffe";
         }
 

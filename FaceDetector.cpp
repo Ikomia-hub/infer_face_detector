@@ -1,17 +1,15 @@
 #include "FaceDetector.h"
-#include "Graphics/CGraphicsLayer.h"
+#include "IO/CObjectDetectionIO.h"
 
 CFaceDetector::CFaceDetector() : COcvDnnProcess()
 {
-    addOutput(std::make_shared<CGraphicsOutput>());
-    addOutput(std::make_shared<CBlobMeasureIO>());
+    addOutput(std::make_shared<CObjectDetectionIO>());
     m_pParam = std::make_shared<CFaceDetectorParam>();
 }
 
 CFaceDetector::CFaceDetector(const std::string &name, const std::shared_ptr<CFaceDetectorParam> &pParam): COcvDnnProcess(name)
 {
-    addOutput(std::make_shared<CGraphicsOutput>());
-    addOutput(std::make_shared<CBlobMeasureIO>());
+    addOutput(std::make_shared<CObjectDetectionIO>());
     m_pParam = std::make_shared<CFaceDetectorParam>(*pParam);
 }
 
@@ -22,7 +20,15 @@ size_t CFaceDetector::getProgressSteps()
 
 int CFaceDetector::getNetworkInputSize() const
 {
-    return 300;
+    int size = 300;
+
+    // Trick to overcome OpenCV issue around CUDA context and multithreading
+    // https://github.com/opencv/opencv/issues/20566
+    auto pParam = std::dynamic_pointer_cast<CFaceDetectorParam>(m_pParam);
+    if(pParam->m_backend == cv::dnn::DNN_BACKEND_CUDA && m_bNewInput)
+        size = size + (m_sign * 32);
+
+    return size;
 }
 
 double CFaceDetector::getNetworkInputScaleFactor() const
@@ -74,24 +80,7 @@ void CFaceDetector::run()
 
             pParam->m_bUpdate = false;
         }
-
-        int size = getNetworkInputSize();
-        // Trick to overcome OpenCV issue around CUDA context and multithreading
-        // https://github.com/opencv/opencv/issues/20566
-        if(pParam->m_backend == cv::dnn::DNN_BACKEND_CUDA && m_bNewInput)
-        {
-            size = size + (m_sign * 32);
-            m_sign *= -1;
-            m_bNewInput = false;
-        }
-
-        double scaleFactor = getNetworkInputScaleFactor();
-        cv::Scalar mean = getNetworkInputMean();
-        auto inputBlob = cv::dnn::blobFromImage(imgSrc, scaleFactor, cv::Size(size,size), mean, false, false);
-        m_net.setInput(inputBlob);
-
-        auto netOutNames = getOutputsNames();
-        m_net.forward(netOutputs, netOutNames);
+        forward(imgSrc, netOutputs);
     }
     catch(cv::Exception& e)
     {
@@ -116,14 +105,8 @@ void CFaceDetector::manageOutput(cv::Mat &dnnOutput)
     auto pInput = std::dynamic_pointer_cast<CImageIO>(getInput(0));
     CMat imgSrc = pInput->getImage();
 
-    //Graphics output
-    auto pGraphicsOutput = std::dynamic_pointer_cast<CGraphicsOutput>(getOutput(1));
-    pGraphicsOutput->setNewLayer("FaceDetector");
-    pGraphicsOutput->setImageIndex(0);
-
-    //Measures output
-    auto pMeasureOutput = std::dynamic_pointer_cast<CBlobMeasureIO>(getOutput(2));
-    pMeasureOutput->clearData();
+    auto objDetectIOPtr = std::dynamic_pointer_cast<CObjectDetectionIO>(getOutput(1));
+    objDetectIOPtr->init(getName(), 0);
 
     for(int i=0; i<dnnOutput.size[2]; i++)
     {
@@ -148,19 +131,11 @@ void CFaceDetector::manageOutput(cv::Mat &dnnOutput)
             float width = right - left + 1;
             float height = bottom - top + 1;
 
-            //Create rectangle graphics of bbox
-            auto graphicsBox = pGraphicsOutput->addRectangle(left, top, width, height);
-
             //Retrieve class label
-            std::string className = classId < m_classNames.size() ? m_classNames[classId] : "unknown " + std::to_string(classId);
-            std::string label = className + " : " + std::to_string(confidence);
-            pGraphicsOutput->addText(label, left + 5, top + 5);
+            std::string className = classId < m_classNames.size() ? m_classNames[classId] : "human " + std::to_string(classId);
 
-            //Store values to be shown in results table
-            std::vector<CObjectMeasure> results;
-            results.emplace_back(CObjectMeasure(CMeasure(CMeasure::CUSTOM, QObject::tr("Confidence").toStdString()), confidence, graphicsBox->getId(), className));
-            results.emplace_back(CObjectMeasure(CMeasure::Id::BBOX, {left, top, width, height}, graphicsBox->getId(), className));
-            pMeasureOutput->addObjectMeasures(results);
+            CColor color = {0, 30, 255};
+            objDetectIOPtr->addObject(className, confidence, left, top, width, height, color);
         }
     }
 }
