@@ -135,7 +135,7 @@ void CFaceDetector::manageOutput(cv::Mat &dnnOutput)
             std::string className = classId < m_classNames.size() ? m_classNames[classId] : "human " + std::to_string(classId);
 
             CColor color = {0, 30, 255};
-            objDetectIOPtr->addObject(className, confidence, left, top, width, height, color);
+            objDetectIOPtr->addObject(i, className, confidence, left, top, width, height, color);
         }
     }
 }
