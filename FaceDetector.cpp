@@ -58,6 +58,13 @@ void CFaceDetector::run()
     pParam->m_structureFile = pluginDir + "/Model/res10_300x300_ssd_iter_140000.prototxt";
     pParam->m_modelFile = pluginDir + "/Model/res10_300x300_ssd_iter_140000.caffemodel";
 
+    if (!Utils::File::isFileExist(pParam->m_modelFile))
+    {
+        std::cout << "Downloading model..." << std::endl;
+        std::string downloadUrl = Utils::Plugin::getModelHubUrl() + "/" + m_name + "/res10_300x300_ssd_iter_140000.caffemodel";
+        download(downloadUrl, pParam->m_modelFile);
+    }
+
     CMat imgSrc;
     CMat imgOrigin = pInput->getImage();
     std::vector<cv::Mat> netOutputs;
