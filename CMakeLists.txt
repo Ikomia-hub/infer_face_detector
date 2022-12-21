@@ -33,7 +33,8 @@ add_library(infer_face_detector SHARED
 
 set_target_properties(infer_face_detector PROPERTIES
     VERSION ${PLUGIN_VERSION}
-    SOVERSION ${PLUGIN_VERSION})
+    SOVERSION ${PLUGIN_VERSION}
+)
 
 target_compile_definitions(infer_face_detector PRIVATE
     BOOST_ALL_NO_LIB
@@ -64,7 +65,7 @@ target_include_directories(infer_face_detector PRIVATE
 )
 
 target_link_directories(infer_face_detector PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/../../../IkomiaCore/Build/lib
+    ${IKOMIA_CORE_DIR}/Build/lib
 )
 
 target_link_libraries(infer_face_detector PRIVATE
