@@ -60,8 +60,6 @@ target_compile_definitions(infer_face_detector PRIVATE
     BOOST_ALL_NO_LIB
     QT_DEPRECATED_WARNINGS
     FACEDETECTOR_LIBRARY
-    CUDA11
-    PY310
 )
 
 target_compile_features(infer_face_detector PRIVATE cxx_std_14)
