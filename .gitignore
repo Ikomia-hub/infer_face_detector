@@ -1,1 +1,3 @@
-FaceDetector.pro.user
+build
+CMakeLists.txt.user
+infer_face_detector.pro.user
