@@ -1,16 +1,36 @@
 #include "FaceDetector.h"
 #include "IO/CObjectDetectionIO.h"
 
-CFaceDetector::CFaceDetector() : COcvDnnProcess()
+CFaceDetector::CFaceDetector() : COcvDnnProcess(), CObjectDetectionTask()
 {
-    addOutput(std::make_shared<CObjectDetectionIO>());
+    init();
     m_pParam = std::make_shared<CFaceDetectorParam>();
 }
 
-CFaceDetector::CFaceDetector(const std::string &name, const std::shared_ptr<CFaceDetectorParam> &pParam): COcvDnnProcess(name)
+CFaceDetector::CFaceDetector(const std::string &name, const std::shared_ptr<CFaceDetectorParam> &pParam)
+    : COcvDnnProcess(), CObjectDetectionTask(name)
 {
-    addOutput(std::make_shared<CObjectDetectionIO>());
+    init();
     m_pParam = std::make_shared<CFaceDetectorParam>(*pParam);
+}
+
+void CFaceDetector::init()
+{
+    m_classNames = {"Unknown", "Human"};
+
+    // Generate random colors
+    std::srand(9);
+    double factor = 255 / (double)RAND_MAX;
+
+    for (size_t i=0; i<m_classNames.size(); ++i)
+    {
+        CColor color = {
+            (int)((double)std::rand() * factor),
+            (int)((double)std::rand() * factor),
+            (int)((double)std::rand() * factor)
+        };
+        m_classColors.push_back(color);
+    }
 }
 
 size_t CFaceDetector::getProgressSteps()
@@ -47,10 +67,13 @@ void CFaceDetector::run()
     auto pInput = std::dynamic_pointer_cast<CImageIO>(getInput(0));
     auto pParam = std::dynamic_pointer_cast<CFaceDetectorParam>(m_pParam);
 
-    if(pInput == nullptr || pParam == nullptr)
+    if (pInput == nullptr)
+        throw CException(CoreExCode::INVALID_PARAMETER, "Invalid image input", __func__, __FILE__, __LINE__);
+
+    if (pParam == nullptr)
         throw CException(CoreExCode::INVALID_PARAMETER, "Invalid parameters", __func__, __FILE__, __LINE__);
 
-    if(pInput->isDataAvailable() == false)
+    if (pInput->isDataAvailable() == false)
         throw CException(CoreExCode::INVALID_PARAMETER, "Empty image", __func__, __FILE__, __LINE__);
 
     //Force model files path
@@ -81,20 +104,19 @@ void CFaceDetector::run()
     {
         if(m_net.empty() || pParam->m_bUpdate)
         {
-            m_net = readDnn();
+            m_net = readDnn(pParam);
             if(m_net.empty())
                 throw CException(CoreExCode::INVALID_PARAMETER, "Failed to load network", __func__, __FILE__, __LINE__);
 
             pParam->m_bUpdate = false;
         }
-        forward(imgSrc, netOutputs);
+        forward(imgSrc, netOutputs, pParam);
     }
-    catch(cv::Exception& e)
+    catch(std::exception& e)
     {
         throw CException(CoreExCode::INVALID_PARAMETER, e.what(), __func__, __FILE__, __LINE__);
     }
 
-    readClassNames();
     endTaskRun();
     emit m_signalHandler->doProgress();
     manageOutput(netOutputs[0]);
@@ -103,17 +125,12 @@ void CFaceDetector::run()
 
 void CFaceDetector::manageOutput(cv::Mat &dnnOutput)
 {
-    forwardInputImage();
-
     // Network produces output blob with a shape 1x1xNx7 where N is a number of
     // detections and an every detection is a vector of values
     // [batchId, classId, confidence, left, top, right, bottom]
     auto pParam = std::dynamic_pointer_cast<CFaceDetectorParam>(m_pParam);
     auto pInput = std::dynamic_pointer_cast<CImageIO>(getInput(0));
     CMat imgSrc = pInput->getImage();
-
-    auto objDetectIOPtr = std::dynamic_pointer_cast<CObjectDetectionIO>(getOutput(1));
-    objDetectIOPtr->init(getName(), 0);
 
     for(int i=0; i<dnnOutput.size[2]; i++)
     {
@@ -137,12 +154,7 @@ void CFaceDetector::manageOutput(cv::Mat &dnnOutput)
             float bottom = dnnOutput.at<float>(bottomIndex) * imgSrc.rows;
             float width = right - left + 1;
             float height = bottom - top + 1;
-
-            //Retrieve class label
-            std::string className = classId < m_classNames.size() ? m_classNames[classId] : "human " + std::to_string(classId);
-
-            CColor color = {0, 30, 255};
-            objDetectIOPtr->addObject(i, className, confidence, left, top, width, height, color);
+            addObject(i, classId, confidence, left, top, width, height);
         }
     }
 }
