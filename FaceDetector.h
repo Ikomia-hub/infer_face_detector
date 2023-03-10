@@ -3,8 +3,9 @@
 
 #include "FaceDetectorGlobal.h"
 #include "Process/OpenCV/dnn/COcvDnnProcess.h"
+#include "Task/CObjectDetectionTask.h"
 #include "Widget/OpenCV/dnn/COcvWidgetDnnCore.h"
-#include "CPluginProcessInterface.hpp"
+#include "Core/CPluginProcessInterface.hpp"
 
 //------------------------------//
 //----- CFaceDetectorParam -----//
@@ -42,7 +43,7 @@ class FACEDETECTORSHARED_EXPORT CFaceDetectorParam: public COcvDnnProcessParam
 //-------------------------//
 //----- CFaceDetector -----//
 //-------------------------//
-class FACEDETECTORSHARED_EXPORT CFaceDetector: public COcvDnnProcess
+class FACEDETECTORSHARED_EXPORT CFaceDetector: public COcvDnnProcess, public CObjectDetectionTask
 {
     public:
 
@@ -58,6 +59,7 @@ class FACEDETECTORSHARED_EXPORT CFaceDetector: public COcvDnnProcess
 
     private:
 
+        void        init();
         void        manageOutput(cv::Mat &dnnOutput);
 };
 
